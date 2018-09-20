@@ -1,0 +1,9 @@
+To compile and run Project1.c:
+
+1) Navigate to location of the file with terminal
+2) Compile the program with “gcc -Wall -o project1 Project1.c”
+3) Run the program with “./project1”
+4) Runt he program with performance time “time ./project1”
+
+Cheers,
+Karshan
