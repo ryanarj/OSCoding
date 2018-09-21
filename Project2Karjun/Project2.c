@@ -12,18 +12,14 @@ Author: Karshan Arjun
 #include <sys/wait.h>
 #include <unistd.h>
 
-#define SHMKEY ((key_t) 5000)  
-/* change the key number */
-#define SHMKEY ((key_t) 7890)
-#define SEMKEY ((key_t) 400L)   //Was 4500
-#define NSEMS 1 // Number of semaphores
+#define SHMKEY ((key_t) 1000)
+#define SEMKEY ((key_t) 1200L)
+#define NSEMS 1 
 
 typedef struct {
      int data; 
 } shared_mem;
 shared_mem *process_total;
-
-int sem_id;
 
 typedef union
 {
@@ -32,38 +28,33 @@ typedef union
     ushort *array;
 } semunion;
 
-
 static struct sembuf owait = {0, -1, 0};
 static struct sembuf osignal = {0, 1, 0};
 
 struct sembuf *wait_buffer = &owait;
 struct sembuf *signal_buffer = &osignal;
+int sem_id;
 
 int semwait()
 {
-    int status;
-    status = semop(sem_id, wait_buffer, 1);
-    return status;
+    int value;
+    value = semop(sem_id, wait_buffer, 1);
+    return value;
 }
-
 
 int semsignal()
 {
-    int status;
-    status = semop(sem_id, signal_buffer, 1);
-    return status;
+    int value;
+    value = semop(sem_id, signal_buffer, 1);
+    return value;
 }
-
-
 
 void process_1(){
     int maxValue = 100000;
     int i = 0;
     while(i<maxValue){ 
         semwait();
-        if(process_total->data < 600000){
-            process_total->data +=  1;
-        } 
+        process_total->data +=  1;
         semsignal();
         i+=1;
     }
@@ -74,9 +65,7 @@ void process_2(){
     int i = 0;
     while(i<maxValue){ 
         semwait();
-        if(process_total->data < 600000){
-            process_total->data +=  1;
-        } 
+        process_total->data +=  1;
         semsignal();
         i+=1;
     }
@@ -87,9 +76,7 @@ void process_3(){
     int i = 0;
     while(i<maxValue){ 
         semwait();
-        if(process_total->data < 600000){
-            process_total->data +=  1;
-        } 
+        process_total->data +=  1;
         semsignal();
         i+=1;
     }
@@ -100,9 +87,7 @@ void process_4(){
     int i = 0;
     while(i<maxValue){ 
         semwait();
-        if(process_total->data < 600000){
-            process_total->data +=  1;
-        } 
+        process_total->data +=  1;
         semsignal();
         i+=1;
     }
@@ -112,33 +97,24 @@ int main(void){
     int pids[4] = {0, 0, 0, 0};
     int id;
     int shm_id;
-    char *shmadd;
-    shmadd = (char *) 0;
-    char *shmadd;
-    shmadd = (char *) 0;
-
-/* Variables for Semaphores */
-    int numsem = 0;
-    int val1;
-    int val2;
+    int status;
+    char *shm_add;
+    shm_add = (char *) 0;
+    int num_sem = 0;
     semunion semctl_arg;
     semctl_arg.val = 1;
 
-/* Semaphore Creation */
+    // Create the semephore
     sem_id = semget(SEMKEY, NSEMS, IPC_CREAT | 0666);
-    if(sem_id < 0) printf("Error when creating semaphore.\n");
-
-/* Semaphore Initialization*/
-    val2 = semctl(sem_id, numsem, SETVAL, semctl_arg);
-    val1 = semctl(sem_id, numsem, GETVAL, semctl_arg);
-    if (val1 < 1) printf("Error detected with SETVAL.\n");
+    semctl(sem_id, num_sem, SETVAL, semctl_arg);
+    semctl(sem_id, num_sem, GETVAL, semctl_arg);
 
     // Get shared memory and also place it at the struct
     if ((shm_id = shmget(SHMKEY, sizeof(int), IPC_CREAT | 0666)) < 0){
         perror("shmget");
         exit(1);
     }
-    if ((process_total = (shared_mem *) shmat(shm_id, shmadd, 0)) == (shared_mem*) - 1){
+    if ((process_total = (shared_mem *) shmat(shm_id, shm_add, 0)) == (shared_mem*) - 1){
         perror("shmat");
         exit(0);
     }
